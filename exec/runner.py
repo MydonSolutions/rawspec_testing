@@ -54,8 +54,8 @@ def main(args=None):
     parser.add_argument("-g", "--gpu_id",
                         dest="gpu_id",
                         type=int,
-                        required=True,
-                        help="GPU device ID (0-3) to use in rawspec and turbo_seti")
+                        default=0,
+                        help="GPU device ID (0-3) to use in rawspec and turbo_seti [0]")
     parser.add_argument("--h5",
                         dest="flag_h5",
                         default=True,
@@ -71,6 +71,11 @@ def main(args=None):
                         default=False,
                         action="store_true",
                         help="Flag: Show the installer version and exit")
+    parser.add_argument("rawspec_arguments",
+                        nargs='*',
+                        type=str,
+                        action="store_true",
+                        help="Arguments to include in the rawspec call")
 
     # Validate arguments.
     if args is None:
@@ -81,6 +86,9 @@ def main(args=None):
     if args.show_version:
         print("installer: {}".format(MY_VERSION))
         sys.exit(0)
+
+    if args.gpu_id not in range(4):
+        print("The specified GPU ID must be 0, 1, 2, or 3 but I saw", args.gpu_id)
 
     # Set up logging.
     logger = set_up_logger(MY_NAME)
@@ -128,8 +136,8 @@ def main(args=None):
     # Note: If a rawspec file is X.0000.raw then its rawstem is X.
     for one_raw_file in sorted(glob.glob("{}/*.0000.raw".format(BASELINE_DIR))):
         rawstem = one_raw_file[0:-9]
-        cmd = "rawspec  -f 1048576  -t 51  -g {}  -d {}  {}" \
-              .format(args.gpu_id, TRIAL_DIR, rawstem)
+        cmd = "rawspec  {}  -f 1048576 -t 51  -g {}  -d {}  {}" \
+              .format(' '.join(args.rawspec_arguments), args.gpu_id, TRIAL_DIR, rawstem)
         run_cmd(cmd, logger)
 
     # For each unique 0000.fil, run turbo_seti, dat2tbl, and hdr2tbl.
