@@ -8,6 +8,7 @@ Common definitions and functions.
 import os
 import sys
 import logging
+import time
 
 MY_VERSION = "1.0"
 TS_SNR_THRESHOLD = 10
@@ -75,12 +76,17 @@ def run_cmd(cmd, logger, stderr=None):
     """
     logger.info("Running `{}` .....".format(cmd))
     try:
-        exit_status = os.system(cmd)
+        t_start = time.time()
+        exit_status = os.system('time ' + cmd)
+        t_duration = time.time() - t_start
         if exit_status != 0:
+            logger.info("..... Failed after {:.03f} seconds\n".format(t_duration))
             if stderr is not None:
                 logger.error("Look at stderr file {} !!".format(stderr))
             oops("os.system({}) FAILED, returned exit status {} !!"
                  .format(cmd, exit_status))
+        else:
+            logger.info("..... Took {:.03f} seconds\n".format(t_duration))
     except Exception as exc:
         oops("os.system({}) EXCEPTION {} !!"
              .format(cmd, exc))
